@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 # <HINT> Import any new Models here
-from .models import Course, Enrollment
+from .models import Course, Enrollment, Question, Choice, Submission
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -106,13 +106,11 @@ def submitExam(request, course_id):
     user = request.user
     course = get_object_or_404(Course, pk=course_id)
     enrollment = Enrollment.objects.get(user=user, course=course)
-    
     submission = Submission.objects.create(enrollment=enrollment)
     answers = extract_answers(request)
-    submission.chocies.set(answers)
+    submission.choices.set(answers)
     submission.save()
-
-    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(submission.id,)))
+    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result',args=(course.id, submission.id)))
 
 def extract_answers(request):
     submitted_anwsers = []
@@ -126,13 +124,20 @@ def extract_answers(request):
 def show_exam_result(request, course_id, submission_id):
     course = get_object_or_404(Course, pk=course_id)
     submission = get_object_or_404(Submission, pk=submission_id)
-    answers = submission.objects.all()
-    grade = 0.0
-    for answer in answers.choice_set:
-        if answer.is_correct:
-            grade += answer.question.grade
-    context ={
-        'course': course,
-        'grade' : grade
-        }
-    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
+    choices = submission.choices.all()
+    total_mark, mark = 0, 0
+    for question in course.question_set.all():
+        total_mark += question.grade
+        if question.is_get_score(choices):
+            mark += question.grade
+    
+    context = {
+        "course":course, "choices":choices,"mark":mark, 
+        "total_mark": total_mark, 
+        "submission": submission,
+        "grade": int((mark / total_mark) * 100)
+    }
+
+    return render(
+        request,
+        'onlinecourse/exam_result_bootstrap.html', context)

@@ -37,7 +37,6 @@
 <div class="container-fluid">
     {% if grade > 80 %}
     <div class="alert alert-success">
-       <!--HINT Display passed info -->
        <b> Congratulations, {{user.name}} ! </b> You have passed the exam and completed
             the course with score {{mark}} /{{total_mark}} 
     </div>
@@ -55,13 +54,13 @@
                         <h5>{{question.text}}</h5>
                     </div>
                     <div class="card-body">
-                        {% for answer in question.answer_set.all %}
-                           {% if answer.is_correct and answer in answers %}
-                            <p class="card-text" style="color:green">Correct answer: {{answer.text}}</p>
-                            {% elif answer.is_correct and answer not in answers %}
-                            <p class="card-text" style="color:yellow">Not selected: {{answer.text}}</p>
-                            {% elif answer.is_correct == False and answer in answers %}
-                            <p class="card-text" style="color:red">Incorrect answer: {{answer.text}}</p>
+                        {% for choice in question.choice_set.all %}
+                           {% if choice.is_correct and choice in choices %}
+                            <p class="card-text" style="color:green">Correct answer: {{choice.text}}</p>
+                            {% elif choice.is_correct and choice not in choices %}
+                            <p class="card-text" style="color:orange">Not selected: {{choice.text}}</p>
+                            {% elif choice.is_correct == False and choice in choices %}
+                            <p class="card-text" style="color:red">Wrong answer: {{choice.text}}</p>
                             {% endif %}
                         {% endfor %}
                     </div>
